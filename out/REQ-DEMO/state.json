@@ -2,7 +2,7 @@
   "requestId": "REQ-DEMO",
   "termsAcknowledged": true,
   "acknowledgedBy": "THG4SZH",
-  "acknowledgedAt": "2026-10-14T11:15:16+08:00",
+  "acknowledgedAt": "2026-10-14T16:01:44+08:00",
   "answers": {
     "A1": "Yes",
     "A2": "Yes",
@@ -31,11 +31,31 @@
     "H1": "Yes",
     "I1": "Yes"
   },
+  "completion": {
+    "IT-Solution / AI system name": "MAZE purchasing order tracking agent",
+    "Completed by / Date": "THG4SZH / 2026-10-14",
+    "Section(s) skipped": "none",
+    "No answers": "none",
+    "Not assessable answers (question IDs and missing information)": "none",
+    "Result": "Legal as described",
+    "Storage location": "C:\\Users\\thg4szh\\Documents\\AI_API\\backend\\out\\REQ-DEMO",
+    "Reviewer sign-off": "pending"
+  },
   "document": {
     "name": "China-AI-Compliance-Checklist-IT-Solution-REQ-DEMO.docx",
-    "generatedAt": "2026-10-14T11:15:16+08:00",
-    "sha256": "4cc32ed3200fbd9ea410b3bbb5a326651f47c58eb9f28a03272a38fe93a5b872",
+    "generatedAt": "2026-10-14T16:01:44+08:00",
+    "sha256": "ac487ba040eb8bf0a6325f121a2269df49df2c62216c0262cfeb80b94c3f4de1",
     "questionCount": 26,
+    "completionFields": [
+      "IT-Solution / AI system name",
+      "Completed by / Date",
+      "Section(s) skipped",
+      "No answers",
+      "Not assessable answers (question IDs and missing information)",
+      "Result",
+      "Storage location",
+      "Reviewer sign-off"
+    ],
     "problems": []
   }
 }

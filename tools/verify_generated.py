@@ -23,7 +23,11 @@ from compliance.catalog import (  # noqa: E402
     QUESTION_COL,
     YES_COL,
 )
-from compliance.generator import cell_text, iter_question_rows  # noqa: E402
+from compliance.generator import (  # noqa: E402
+    cell_text,
+    is_question_table,
+    iter_question_rows,
+)
 
 
 def ballot_font(cell) -> str:
@@ -70,6 +74,28 @@ def main(template: str, generated: str) -> int:
 
     print(f"changed cells: {len(changes)}")
     for line in changes:
+        print("  " + line)
+
+    other: list[str] = []
+    for index, (before, after) in enumerate(
+        zip(template_doc.tables, generated_doc.tables), start=1
+    ):
+        if is_question_table(before):
+            continue
+        for row_no, (row_before, row_after) in enumerate(zip(before.rows, after.rows)):
+            for column, (cell_before, cell_after) in enumerate(
+                zip(row_before.cells, row_after.cells)
+            ):
+                previous = cell_text(cell_before)
+                current = cell_text(cell_after)
+                if previous != current:
+                    other.append(
+                        f"table {index} r{row_no}c{column}: "
+                        f"{previous[:70]!r} -> {current[:70]!r}"
+                    )
+    print()
+    print(f"changed cells outside the question tables: {len(other)}")
+    for line in other:
         print("  " + line)
 
     sample = next(iter(generated_rows.values()))

@@ -33,6 +33,10 @@ def main(argv: list[str] | None = None) -> int:
     ack = sub.add_parser("acknowledge", help="simulate ticking the frontend checkbox")
     ack.add_argument("--request-id", required=True)
     ack.add_argument("--actor", default=None)
+    ack.add_argument("--name", default=None, help="IT-solution name for the Completion Record")
+    ack.add_argument("--storage-location", default=None)
+    ack.add_argument("--sign-off", default=None)
+    ack.add_argument("--force", action="store_true", help="regenerate an existing document")
     ack.add_argument("--revoke", action="store_true", help="clear the checkbox instead")
 
     for sub_parser in (serve, ack):
@@ -50,7 +54,13 @@ def main(argv: list[str] | None = None) -> int:
         return serve_main(forwarded)
 
     state = _service(args).acknowledge(
-        args.request_id, acknowledged=not args.revoke, actor=args.actor
+        args.request_id,
+        acknowledged=not args.revoke,
+        actor=args.actor,
+        name=args.name,
+        storage_location=args.storage_location,
+        sign_off=args.sign_off,
+        force=args.force,
     )
     print(json.dumps(state, indent=2, ensure_ascii=False))
     return 0

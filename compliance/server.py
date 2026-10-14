@@ -34,6 +34,14 @@ from .service import (
 DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 
+def _optional_str(value, field: str) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(f"{field} must be a string")
+    return value
+
+
 class ChecklistRequestHandler(BaseHTTPRequestHandler):
     server_version = "ChecklistBackend/1.0"
     protocol_version = "HTTP/1.1"
@@ -121,7 +129,12 @@ class ChecklistRequestHandler(BaseHTTPRequestHandler):
                 state = self.service.acknowledge(
                     request_id,
                     acknowledged=acknowledged,
-                    actor=actor,
+                    actor=_optional_str(actor, "actor"),
+                    name=_optional_str(body.get("name"), "name"),
+                    storage_location=_optional_str(
+                        body.get("storageLocation"), "storageLocation"
+                    ),
+                    sign_off=_optional_str(body.get("signOff"), "signOff"),
                     force=bool(body.get("force", False)),
                 )
                 payload = dict(state)

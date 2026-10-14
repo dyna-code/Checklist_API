@@ -291,7 +291,7 @@ def completion_metadata(
     completed_by: str | None = None,
     skipped: Iterable[str] = (),
     no_answers: Iterable[str] = (),
-    not_assessable: str = "none",
+    not_assessable: Iterable[str] = (),
     result: str | None = None,
     storage_location: str | None = None,
     sign_off: str | None = None,
@@ -303,11 +303,9 @@ def completion_metadata(
         values[FIELD_NAME] = name
     if completed_by is not None:
         values[FIELD_COMPLETED] = completed_by
-    skipped_list = list(skipped)
-    values[FIELD_SKIPPED] = ", ".join(skipped_list) if skipped_list else "none"
-    no_answer_list = list(no_answers)
-    values[FIELD_NO_ANSWERS] = ", ".join(no_answer_list) if no_answer_list else "none"
-    values[FIELD_NOT_ASSESSABLE] = not_assessable
+    values[FIELD_SKIPPED] = _join(skipped)
+    values[FIELD_NO_ANSWERS] = _join(no_answers)
+    values[FIELD_NOT_ASSESSABLE] = _join(not_assessable)
     if result is not None:
         values[FIELD_RESULT] = result
     if storage_location is not None:
@@ -315,3 +313,8 @@ def completion_metadata(
     if sign_off is not None:
         values[FIELD_SIGN_OFF] = sign_off
     return values
+
+
+def _join(items: Iterable[str]) -> str:
+    values = [str(item) for item in items]
+    return ", ".join(values) if values else "none"

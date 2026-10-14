@@ -12,8 +12,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from .catalog import MARK_YES, YES
-from .generator import generate_document
+from .catalog import MARK_YES, YES, derive_completion
+from .generator import completion_metadata, generate_document
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_TEMPLATE = BACKEND_DIR / "templates" / "China-AI-Compliance-Checklist-IT-Solution-v1.3.docx"
@@ -103,27 +103,27 @@ class ComplianceService:
         *,
         acknowledged: bool = True,
         actor: str | None = None,
+        name: str | None = None,
+        storage_location: str | None = None,
+        sign_off: str | None = None,
         force: bool = False,
     ) -> dict:
         """Apply the "已阅读" checkbox.
 
         With ``acknowledged=True`` every checklist question becomes ``Yes`` and
-        the DOCX is written. Calling it again is idempotent unless ``force`` is
-        set. With ``acknowledged=False`` the flag is cleared and no document is
-        produced (an existing document is kept, so nothing is destroyed).
+        the DOCX is written, with the Completion Record filled in. Calling it
+        again is idempotent unless ``force`` is set. With
+        ``acknowledged=False`` the flag is cleared and no document is produced
+        (an existing document is kept, so nothing is destroyed).
+
+        ``name`` is the IT-solution name for the record and defaults to the
+        request id. ``storage_location`` defaults to the folder holding the
+        generated document. ``sign_off`` defaults to ``pending`` because only
+        the reviewer can sign.
         """
 
         existing = self.get_state(request_id)
         document = self.document_path(request_id)
-
-        if (
-            not force
-            and acknowledged
-            and existing
-            and existing.get("termsAcknowledged") is True
-            and document.is_file()
-        ):
-            return existing
 
         if not acknowledged:
             state = {
@@ -132,29 +132,56 @@ class ComplianceService:
                 "acknowledgedBy": actor or (existing or {}).get("acknowledgedBy"),
                 "acknowledgedAt": now_iso(),
                 "answers": {},
+                "completion": None,
                 "document": None,
             }
             self._write_state(request_id, state)
             return state
 
-        answers = {question_id: YES for question_id in self._question_ids()}
+        question_ids = self._question_ids()
+        answers = {question_id: YES for question_id in question_ids}
+        derived = derive_completion(answers, question_ids)
+        instant = datetime.now().astimezone()
+        metadata = completion_metadata(
+            name=name or request_id,
+            completed_by=f"{actor} / {instant:%Y-%m-%d}" if actor else f"{instant:%Y-%m-%d}",
+            skipped=derived["skipped"],
+            no_answers=derived["no_answers"],
+            not_assessable=derived["not_assessable"],
+            result=derived["result"],
+            storage_location=storage_location or str(document.parent),
+            sign_off=sign_off or "pending",
+        )
+
+        if (
+            not force
+            and existing
+            and existing.get("termsAcknowledged") is True
+            and existing.get("completion") == metadata
+            and document.is_file()
+        ):
+            return existing
+
         summary = generate_document(
             self.template_path,
             document,
             answers,
             mark=self.mark,
+            metadata=metadata,
         )
         state = {
             "requestId": request_id,
             "termsAcknowledged": True,
             "acknowledgedBy": actor,
-            "acknowledgedAt": now_iso(),
+            "acknowledgedAt": instant.isoformat(timespec="seconds"),
             "answers": answers,
+            "completion": metadata,
             "document": {
                 "name": document.name,
                 "generatedAt": summary["generatedAt"],
                 "sha256": summary["sha256"],
                 "questionCount": summary["questionCount"],
+                "completionFields": summary["completionFields"],
                 "problems": summary["problems"],
             },
         }

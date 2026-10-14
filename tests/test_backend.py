@@ -24,6 +24,7 @@ sys.path.insert(0, str(BACKEND_DIR))
 
 from docx import Document  # noqa: E402
 
+from compliance.catalog import QUESTION_IDS, derive_completion  # noqa: E402
 from compliance.generator import (  # noqa: E402
     cell_text,
     completion_metadata,
@@ -37,6 +38,18 @@ from compliance.service import ComplianceService  # noqa: E402
 TEMPLATE = BACKEND_DIR / "templates" / "China-AI-Compliance-Checklist-IT-Solution-v1.3.docx"
 TESTS_ROOT = BACKEND_DIR / "out" / "_tests"
 QUESTION_COUNT = 26
+
+
+def completion_entries(path) -> dict[str, str]:
+    """Read the Completion Record table out of a generated document."""
+
+    doc = Document(str(path))
+    table = next(
+        table
+        for table in doc.tables
+        if len(table.columns) == 2 and cell_text(table.rows[0].cells[0]) == "Field"
+    )
+    return {cell_text(row.cells[0]): cell_text(row.cells[1]) for row in table.rows[1:]}
 
 
 class WorkspaceCase(unittest.TestCase):
@@ -159,6 +172,54 @@ class ServiceTests(WorkspaceCase):
         with self.assertRaises(ValueError):
             self.service.acknowledge("../etc/passwd")
 
+    def test_completion_record_is_filled(self) -> None:
+        document = self.service.document_path("REQ-4")
+        state = self.service.acknowledge(
+            "REQ-4", actor="THG4SZH", name="MAZE purchasing order tracking agent"
+        )
+        entries = completion_entries(document)
+
+        self.assertEqual(
+            entries["IT-Solution / AI system name"], "MAZE purchasing order tracking agent"
+        )
+        self.assertTrue(entries["Completed by / Date"].startswith("THG4SZH / "))
+        self.assertEqual(entries["Section(s) skipped"], "none")
+        self.assertEqual(entries["No answers"], "none")
+        self.assertEqual(
+            entries["Not assessable answers (question IDs and missing information)"], "none"
+        )
+        self.assertIn("[x] Legal as described", entries["Result"])
+        self.assertIn("[ ] Action required", entries["Result"])
+        self.assertEqual(entries["Storage location"], str(document.parent))
+        self.assertEqual(entries["Reviewer sign-off"], "pending")
+        self.assertEqual(state["completion"]["Result"], "Legal as described")
+
+    def test_completion_record_defaults_to_the_request_id(self) -> None:
+        self.service.acknowledge("REQ-5", actor="THG4SZH")
+        entries = completion_entries(self.service.document_path("REQ-5"))
+        self.assertEqual(entries["IT-Solution / AI system name"], "REQ-5")
+        self.assertTrue(all("[TBD" not in value for value in entries.values()))
+
+
+class DerivationTests(unittest.TestCase):
+    def test_result_follows_the_verdict_table(self) -> None:
+        ids = QUESTION_IDS
+
+        clean = {question_id: "Yes" for question_id in ids}
+        self.assertEqual(derive_completion(clean, ids)["result"], "Legal as described")
+
+        with_no = dict(clean)
+        with_no["A1"] = "No"
+        self.assertEqual(derive_completion(with_no, ids)["result"], "Action required")
+
+        with_na = dict(clean)
+        for index in (1, 2, 3):
+            with_na[f"B{index}"] = "Not assessable"
+        derived = derive_completion(with_na, ids)
+        self.assertEqual(derived["result"], "Cannot determine")
+        self.assertEqual(derived["skipped"], ["B"])
+        self.assertEqual(derived["not_assessable"], ["B1", "B2", "B3"])
+
 
 class ApiTests(WorkspaceCase):
     def setUp(self) -> None:
@@ -183,7 +244,13 @@ class ApiTests(WorkspaceCase):
     def test_checkbox_tick_generates_the_document(self) -> None:
         request = urllib.request.Request(
             self.url("/api/ai-requests/REQ-API/compliance/acknowledge"),
-            data=json.dumps({"termsAcknowledged": True, "actor": "THG4SZH"}).encode(),
+            data=json.dumps(
+                {
+                    "termsAcknowledged": True,
+                    "actor": "THG4SZH",
+                    "name": "REQ-API agent",
+                }
+            ).encode(),
             headers={"Content-Type": "application/json"},
             method="POST",
         )
@@ -205,6 +272,10 @@ class ApiTests(WorkspaceCase):
         saved = self.workdir / "downloaded.docx"
         saved.write_bytes(body)
         self.assertEqual(verify_document(saved), [])
+
+        entries = completion_entries(saved)
+        self.assertEqual(entries["IT-Solution / AI system name"], "REQ-API agent")
+        self.assertIn("[x] Legal as described", entries["Result"])
 
     def test_state_endpoint_reports_not_acknowledged(self) -> None:
         with urllib.request.urlopen(

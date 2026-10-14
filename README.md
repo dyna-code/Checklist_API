@@ -34,6 +34,33 @@ cd backend
 & $py -m compliance.cli serve --port 8099
 ```
 
+## Completion Record
+
+Ticking the checkbox also fills the Completion Record, so the generated
+document has no `[TBD]` left in it:
+
+| Field | Value |
+| --- | --- |
+| IT-Solution / AI system name | the `name` supplied by the caller, otherwise the request id |
+| Completed by / Date | `{actor} / YYYY-MM-DD` at the moment of acknowledgement |
+| Section(s) skipped | `none` |
+| No answers | `none` |
+| Not assessable answers | `none` |
+| Result | `[x] Legal as described` |
+| Storage location | the folder holding the generated document, or `storageLocation` |
+| Reviewer sign-off | `pending`, or `signOff` |
+
+The last four rows are derived from the answers rather than hard-coded, using
+the same logic as the Verdict table: any `No` gives `Action required`, open
+`Not assessable` items give `Cannot determine`, and a clean sheet gives
+`Legal as described`. A section counts as skipped when every question in it is
+`Not assessable`. With the current all-Yes behaviour the result is always
+`Legal as described`, `none` gaps, and no skipped sections.
+
+Step 0 (the MM-641.48 category) is deliberately left untouched - it is not a
+Yes/No question and needs the real LeanIX classification. It is available as
+an option: `generate_document(..., step0="AI-2")`.
+
 ## API
 
 Tick the checkbox:
@@ -42,8 +69,17 @@ Tick the checkbox:
 POST /api/ai-requests/{requestId}/compliance/acknowledge
 Content-Type: application/json
 
-{ "termsAcknowledged": true, "actor": "THG4SZH" }
+{
+  "termsAcknowledged": true,
+  "actor": "THG4SZH",
+  "name": "MAZE purchasing order tracking agent",
+  "storageLocation": "MP-308.24-Step2 project folder",
+  "signOff": "China AI Compliance Board"
+}
 ```
+
+Only `termsAcknowledged` is required; `actor`, `name`, `storageLocation` and
+`signOff` are optional and fall back to the defaults above.
 
 `200` response:
 
@@ -54,6 +90,16 @@ Content-Type: application/json
   "acknowledgedBy": "THG4SZH",
   "acknowledgedAt": "2026-10-14T11:11:33+08:00",
   "answers": { "A1": "Yes", "A2": "Yes", "...": "Yes" },
+  "completion": {
+    "IT-Solution / AI system name": "MAZE purchasing order tracking agent",
+    "Completed by / Date": "THG4SZH / 2026-10-14",
+    "Section(s) skipped": "none",
+    "No answers": "none",
+    "Not assessable answers (question IDs and missing information)": "none",
+    "Result": "Legal as described",
+    "Storage location": "backend\\out\\REQ-123",
+    "Reviewer sign-off": "pending"
+  },
   "document": {
     "name": "China-AI-Compliance-Checklist-IT-Solution-REQ-123.docx",
     "questionCount": 26,
@@ -97,7 +143,8 @@ The browser talks to this service directly, so keep the CORS header in
 
 ```powershell
 & $py -m unittest discover -s tests -v                          # tests
-& $py -m compliance.cli acknowledge --request-id REQ-DEMO        # generate one document
+& $py -m compliance.cli acknowledge --request-id REQ-DEMO `
+    --actor THG4SZH --name "MAZE purchasing order tracking agent"
 & $py tools\verify_generated.py `
     templates\China-AI-Compliance-Checklist-IT-Solution-v1.3.docx `
     out\REQ-DEMO\China-AI-Compliance-Checklist-IT-Solution-REQ-DEMO.docx

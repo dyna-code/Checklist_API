@@ -1,0 +1,61 @@
+{
+  "requestId": "REQ-124",
+  "termsAcknowledged": true,
+  "acknowledgedBy": "me",
+  "acknowledgedAt": "2026-10-14T16:03:06+08:00",
+  "answers": {
+    "A1": "Yes",
+    "A2": "Yes",
+    "A3": "Yes",
+    "A4": "Yes",
+    "A5": "Yes",
+    "A6": "Yes",
+    "A7": "Yes",
+    "B1": "Yes",
+    "B2": "Yes",
+    "B3": "Yes",
+    "C1": "Yes",
+    "C2": "Yes",
+    "D1": "Yes",
+    "D2": "Yes",
+    "D3": "Yes",
+    "E1": "Yes",
+    "E2": "Yes",
+    "E3": "Yes",
+    "F1": "Yes",
+    "F2": "Yes",
+    "F3": "Yes",
+    "G1": "Yes",
+    "G2": "Yes",
+    "G3": "Yes",
+    "H1": "Yes",
+    "I1": "Yes"
+  },
+  "completion": {
+    "IT-Solution / AI system name": "REQ-124",
+    "Completed by / Date": "me / 2026-10-14",
+    "Section(s) skipped": "none",
+    "No answers": "none",
+    "Not assessable answers (question IDs and missing information)": "none",
+    "Result": "Legal as described",
+    "Storage location": "C:\\Users\\thg4szh\\Documents\\AI_API\\backend\\out\\REQ-124",
+    "Reviewer sign-off": "pending"
+  },
+  "document": {
+    "name": "China-AI-Compliance-Checklist-IT-Solution-REQ-124.docx",
+    "generatedAt": "2026-10-14T16:03:06+08:00",
+    "sha256": "397c61d630883c0187eb90b9257991e7bff4b69559ab741126dfc5a642f87e25",
+    "questionCount": 26,
+    "completionFields": [
+      "IT-Solution / AI system name",
+      "Completed by / Date",
+      "Section(s) skipped",
+      "No answers",
+      "Not assessable answers (question IDs and missing information)",
+      "Result",
+      "Storage location",
+      "Reviewer sign-off"
+    ],
+    "problems": []
+  }
+}

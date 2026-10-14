@@ -1,0 +1,41 @@
+{
+  "requestId": "REQ-DEMO",
+  "termsAcknowledged": true,
+  "acknowledgedBy": "THG4SZH",
+  "acknowledgedAt": "2026-10-14T11:15:16+08:00",
+  "answers": {
+    "A1": "Yes",
+    "A2": "Yes",
+    "A3": "Yes",
+    "A4": "Yes",
+    "A5": "Yes",
+    "A6": "Yes",
+    "A7": "Yes",
+    "B1": "Yes",
+    "B2": "Yes",
+    "B3": "Yes",
+    "C1": "Yes",
+    "C2": "Yes",
+    "D1": "Yes",
+    "D2": "Yes",
+    "D3": "Yes",
+    "E1": "Yes",
+    "E2": "Yes",
+    "E3": "Yes",
+    "F1": "Yes",
+    "F2": "Yes",
+    "F3": "Yes",
+    "G1": "Yes",
+    "G2": "Yes",
+    "G3": "Yes",
+    "H1": "Yes",
+    "I1": "Yes"
+  },
+  "document": {
+    "name": "China-AI-Compliance-Checklist-IT-Solution-REQ-DEMO.docx",
+    "generatedAt": "2026-10-14T11:15:16+08:00",
+    "sha256": "4cc32ed3200fbd9ea410b3bbb5a326651f47c58eb9f28a03272a38fe93a5b872",
+    "questionCount": 26,
+    "problems": []
+  }
+}
